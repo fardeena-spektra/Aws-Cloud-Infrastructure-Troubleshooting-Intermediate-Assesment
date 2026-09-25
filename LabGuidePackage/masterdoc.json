@@ -4,19 +4,19 @@
     "Language": "English",
     "Files": [
       {
-        "RawFilePath": "https://docs-api.cloudlabs.ai/repos/raw.githubusercontent.com/CloudLabsAI-Azure/Nedbank/refs/heads/YOUR-BRANCH/Nedbank-assessments-full/Nedbank-main/aws-cloud-infrastructure-troubleshooting-intermediate-Assessment/LabGuidePackage/LabGuide/GettingStarted.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/GettingStarted.md",
         "Order": 1
       },
       {
-        "RawFilePath": "https://docs-api.cloudlabs.ai/repos/raw.githubusercontent.com/CloudLabsAI-Azure/Nedbank/refs/heads/YOUR-BRANCH/Nedbank-assessments-full/Nedbank-main/aws-cloud-infrastructure-troubleshooting-intermediate-Assessment/LabGuidePackage/LabGuide/Labguide-01.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/Labguide-01.md",
         "Order": 2
       },
       {
-        "RawFilePath": "https://docs-api.cloudlabs.ai/repos/raw.githubusercontent.com/CloudLabsAI-Azure/Nedbank/refs/heads/YOUR-BRANCH/Nedbank-assessments-full/Nedbank-main/aws-cloud-infrastructure-troubleshooting-intermediate-Assessment/LabGuidePackage/LabGuide/Labguide-02.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/Labguide-02.md",
         "Order": 3
       },
       {
-        "RawFilePath": "https://docs-api.cloudlabs.ai/repos/raw.githubusercontent.com/CloudLabsAI-Azure/Nedbank/refs/heads/YOUR-BRANCH/Nedbank-assessments-full/Nedbank-main/aws-cloud-infrastructure-troubleshooting-intermediate-Assessment/LabGuidePackage/LabGuide/Labguide-03.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/Labguide-03.md",
         "Order": 4
       }
     ]
