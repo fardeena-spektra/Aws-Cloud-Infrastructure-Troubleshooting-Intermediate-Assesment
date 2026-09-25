@@ -2,19 +2,19 @@
 Question Type : Single Choice
 
 ## Question
-4. The monitoring server in vpc-shared uses security group sg-0mon and must scrape port 9100 on the core app instances. How should the core app security group allow this traffic?
+4. sg-dev-web allows inbound port 80 from 0.0.0.0/0 and still has its default outbound rule. Do the web responses reach the customers?
 
 ## Options
-Option 1 : It is not possible, because a security group can only reference groups inside its own VPC.
+Option 1 : No, an outbound rule for port 80 must be added so that the responses can leave dev-web.
 
-Option 2 : Add an outbound rule on 9100 to sg-0mon, because the monitoring server starts each flow.
+Option 2 : Yes, security groups are stateful, so replies to allowed requests are allowed out.
 
-Option 3 : Add an inbound rule on 9100 from 0.0.0.0/0, since peered traffic ignores group references.
+Option 3 : No, the network ACL must first be changed to allow outbound port 80 from dev-public.
 
-Option 4 : Add an inbound rule on 9100 that references sg-0mon, as the peering is in one Region.
+Option 4 : Yes, but only when the customers connect using HTTPS on port 443 instead of port 80.
 
 ## Answers
-Option 4 : 2
+Option 2 : 2
 
 ## Number of Retries
 1

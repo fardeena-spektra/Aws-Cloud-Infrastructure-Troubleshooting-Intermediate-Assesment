@@ -1,12 +1,13 @@
 # =====================================================================
 # PAYNOTIFY AWS Troubleshooting Assessment
-# Scenario 1 - Task 2 : Fix the Web Service Listener on the Instance
+# Scenario 1 - Task 1 : Repair the PAYNOTIFY Statements Bucket
 #
 # Checks performed (all must pass):
-#   1. pn-web-01 is reachable through Systems Manager
-#   2. The paynotify-web service is active
-#   3. The service listens on all interfaces on TCP 8080 (not only 127.0.0.1)
-#   4. GET /health on the instance private IP returns 200
+#   1. The pn-statements bucket exists
+#   2. All four Block Public Access settings are On
+#   3. Bucket versioning is Enabled
+#   4. The bucket policy no longer denies uploads to statements/
+#   5. statements/test-statement.txt has been uploaded
 #
 # Read-only: this validator never changes the environment.
 # =====================================================================
@@ -109,31 +110,34 @@ function Get-NaclDecision($entries, [bool]$egress, [string]$ip, [int]$port) {
 $message = ''
 try {
 
-    $web = Get-TaggedInstance 'pn-web-01'
-    if (-not $web) { Add-Check $false 'The web instance pn-web-01 was not found. Contact your instructor.' }
-    elseif (-not (Test-SSMOnline $web.InstanceId)) {
-        Add-Check $false 'Task 1 must be completed first - pn-web-01 is not Online in Systems Manager.'
-    }
-    else {
-        Add-Check $true ''
-        $cmds = @(
-            'echo "ACTIVE=$(systemctl is-active paynotify-web)"',
-            'echo "LISTEN_BEGIN"; ss -lnt | grep ":8080 " ; echo "LISTEN_END"',
-            'IP=$(hostname -I | cut -d" " -f1); echo "HEALTH=$(curl -s -o /dev/null -m 5 -w "%{http_code}" "http://$IP:8080/health")"'
-        )
-        $r = Invoke-SSMShell $web.InstanceId $cmds 30
-        $o = $r.Output
-        Write-Host $o
-        if (-not $o) {
-            Add-Check $false 'Could not read the service state from pn-web-01. Wait a minute and validate again.'
+    $bucket = Get-S3Bucket | Where-Object { $_.BucketName -like ((Get-Pattern 'pn-statements') + '-*') } | Select-Object -First 1
+    Add-Check ([bool]$bucket) 'The pn-statements bucket was not found. Contact your instructor.'
+    if ($bucket) {
+        $b = $bucket.BucketName
+        Write-Host "Bucket: $b"
+
+        $pab = $null
+        try { $pab = Get-S3PublicAccessBlock -BucketName $b } catch { $pab = $null }
+        $pabOk = $pab -and $pab.BlockPublicAcls -and $pab.IgnorePublicAcls -and $pab.BlockPublicPolicy -and $pab.RestrictPublicBuckets
+        Add-Check ([bool]$pabOk) 'Block all public access is not fully turned On for the bucket. Turn on all four settings.'
+
+        $ver = Get-S3BucketVersioning -BucketName $b
+        Add-Check ("$($ver.Status)" -eq 'Enabled') 'Bucket versioning is not Enabled.'
+
+        $policyText = ''
+        try { $policyText = Get-S3BucketPolicy -BucketName $b } catch { $policyText = '' }
+        $denyUpload = $false
+        if ($policyText) {
+            $doc = $policyText | ConvertFrom-Json
+            foreach ($st in @($doc.Statement)) {
+                $acts = @($st.Action) -join ' '
+                if ("$($st.Effect)" -eq 'Deny' -and ($acts -match 's3:PutObject' -or $acts -match 's3:\*')) { $denyUpload = $true }
+            }
         }
-        else {
-            Add-Check ($o -match 'ACTIVE=active') 'Task 2 - the paynotify-web service is not running. Start it with systemctl after fixing the unit file.'
-            $listen = ($o -split 'LISTEN_BEGIN')[-1] -split 'LISTEN_END' | Select-Object -First 1
-            $allIf = ($listen -match '0\.0\.0\.0:8080') -or ($listen -match '\*:8080') -or ($listen -match '\[::\]:8080')
-            Add-Check $allIf 'Task 2 - paynotify-web still listens only on 127.0.0.1:8080. Change the bind address to 0.0.0.0, reload systemd and restart the service.'
-            Add-Check ($o -match 'HEALTH=200') 'Task 2 - /health does not return 200 on the instance private IP address.'
-        }
+        Add-Check (-not $denyUpload) 'The bucket policy still denies s3:PutObject (statement FreezeStatementUploads). Remove it.'
+
+        $obj = Get-S3Object -BucketName $b -Prefix 'statements/' | Where-Object { $_.Key -eq 'statements/test-statement.txt' }
+        Add-Check ([bool]$obj) 'statements/test-statement.txt was not found in the bucket. Upload the file into the statements folder.'
     }
 
     $total = $script:passes + $script:fails.Count

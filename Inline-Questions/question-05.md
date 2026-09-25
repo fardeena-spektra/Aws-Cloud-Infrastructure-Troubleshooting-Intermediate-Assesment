@@ -1,21 +1,20 @@
 ## MetaData
-Question Type : Multiple Choice
+Question Type : Single Choice
 
 ## Question
-5. Users report that roughly half of the requests to the internet-facing load balancer pn-alb-reporting time out, while the rest succeed. Which two statements are correct? Select two.
+5. dev-app must now upload files to the S3 bucket dev-reports, but it gets AccessDenied. What is the correct fix?
 
 ## Options
-Option 1 : Cross-zone load balancing is disabled, so the node in public-b drops half of all the requests.
+Option 1 : Create an IAM user with access keys and save the keys in a file on the dev-app instance.
 
-Option 2 : Clients sent to the load balancer node in public-b time out as rt-public-b has no IGW route.
+Option 2 : Make the dev-reports bucket public so that any instance in the VPC is able to write to it.
 
-Option 3 : The targets in app-b need public IP addresses so the node in public-b is able to reach them.
+Option 3 : Add s3:PutObject on arn:aws:s3:::dev-reports/* to the dev-app-role IAM role policy.
 
-Option 4 : Adding a 0.0.0.0/0 route to igw-0main in rt-public-b makes both balancer nodes reachable.
+Option 4 : Attach sg-dev-app to the dev-reports bucket so the instance is allowed to write objects.
 
 ## Answers
-Option 2 : 2
-Option 4 : 2
+Option 3 : 2
 
 ## Number of Retries
 1

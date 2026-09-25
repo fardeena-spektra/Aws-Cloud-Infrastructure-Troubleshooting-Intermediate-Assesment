@@ -4,54 +4,46 @@
 
 Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)** assessment.
 
-Nedbank runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window the service is down. Customers get an error from the public load balancer, the operations team cannot open a session on the web instance, and the private application tier can no longer reach the internet, Amazon S3 or the orders database.
+Nedbank runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window, customer statements can no longer be uploaded to Amazon S3 and the notification function in AWS Lambda fails on every run.
 
-In this assessment you take the role of the on-call cloud engineer. You will diagnose and repair a deliberately broken AWS environment across the web tier and the private application tier, and then answer scenario-based networking questions about a wider PAYNOTIFY design.
+In this assessment you take the role of the on-call cloud engineer. You will repair a broken S3 bucket, fix a broken Lambda function, and then answer scenario-based questions on core AWS services.
 
 ## Objectives
 
 In this assessment, you will:
 
-- Troubleshoot EC2 connectivity and restore Session Manager access
-- Repair an Application Load Balancer, its listener, target group and security groups
-- Troubleshoot network ACL and security group rules that block traffic between tiers
-- Restore internet connectivity for a private EC2 instance
-- Fix EC2-to-S3 access using IAM roles
-- Troubleshoot EC2-to-RDS connectivity
-- Analyse an AWS network design and identify routing, peering and endpoint issues
+- Secure and repair an Amazon S3 bucket configuration
+- Troubleshoot and fix an AWS Lambda function
+- Answer scenario-based questions on core AWS services
 
 ## Prerequisites
 
-Participants should have working knowledge of the following:
+Participants should have basic knowledge of the following:
 
-- Amazon VPC, subnets, route tables, internet gateways and NAT gateways
-- Security groups and network ACLs
-- IAM roles, instance profiles and IAM policy evaluation
-- Application Load Balancer listeners and target groups
-- AWS Systems Manager Session Manager
-- Basic Linux shell commands
+- Amazon S3 buckets, bucket policies and versioning
+- AWS Lambda functions, handlers and environment variables
+- IAM roles and policies
 
 ## Architecture
 
 ![](../media/architecture.png)
 
-- **pn-alb** is an internet-facing Application Load Balancer in two public subnets. It forwards HTTP traffic to **pn-web-01** on port 8080 through the target group **pn-web-tg**.
-- **pn-web-01** runs the PAYNOTIFY web front end in its own subnet, **pn-web-subnet**, protected by **pn-web-sg** and **pn-web-nacl**.
-- **pn-app-01** is a private instance in **pn-app-subnet**. It reaches the internet through the NAT gateway **pn-nat**, writes to the S3 bucket **pn-appdata**, and connects to the MySQL database **pn-orders-db**.
-- Every instance is managed through AWS Systems Manager Session Manager. No SSH keys are used.
+- **pn-statements** is the S3 bucket that stores customer statements and notification records.
+- **pn-notify** is a Python Lambda function that writes a notification record to the **pn-statements** bucket.
+- You work from a Windows virtual machine and the AWS Management Console.
 
 ## Scenario Breakdown
 
 | Scenario | Title | Type | Tasks |
 |---|---|---|---|
-| Scenario 1 | Restore the PAYNOTIFY Web Tier | Hands-on | 4 validated tasks |
-| Scenario 2 | Repair the Private Application Tier | Hands-on | 4 validated tasks |
-| Scenario 3 | Diagnose the PAYNOTIFY Network Design | Questions | 6 questions |
+| Scenario 1 | Repair the PAYNOTIFY Statements Bucket | Hands-on | 1 validated task |
+| Scenario 2 | Repair the PAYNOTIFY Notification Function | Hands-on | 1 validated task |
+| Scenario 3 | Review the PAYNOTIFY Network Basics | Questions | 6 questions |
 
 ## Scoring Summary
 
-- Scenario 1 and Scenario 2 are scored by the **Validate** button at the end of each task.
-- Scenario 3 contains single choice and multiple choice questions. Each correct answer carries **2 marks**.
+- Scenario 1 and Scenario 2 are scored by the **Validate** button at the end of the scenario task.
+- Scenario 3 contains single choice questions. Each correct answer carries **2 marks**.
 - Each question allows **1** retry.
 
 ## Environment Details
@@ -60,11 +52,10 @@ Participants should have working knowledge of the following:
 |---|---|
 | AWS Region | <inject key="Region" enableCopy="true"/> |
 | Deployment ID | <inject key="CloudLabsDeploymentID" enableCopy="true"/> |
-| Load balancer DNS name | <inject key="LoadBalancerDNS" enableCopy="true"/> |
-| App data bucket | <inject key="AppDataBucket" enableCopy="true"/> |
-| Orders database endpoint | <inject key="DatabaseEndpoint" enableCopy="true"/> |
+| Statements bucket | <inject key="StatementsBucket" enableCopy="true"/> |
+| Lambda function | <inject key="LambdaFunctionName" enableCopy="true"/> |
 
-All resources in this assessment carry the suffix **-<inject key="CloudLabsDeploymentID" />** in their names, for example **pn-web-01-<inject key="CloudLabsDeploymentID" />**.
+All resources in this assessment carry the suffix **-<inject key="CloudLabsDeploymentID" />** in their names, for example **pn-notify-<inject key="CloudLabsDeploymentID" />**.
 
 ## Accessing Your Assessment Environment
 

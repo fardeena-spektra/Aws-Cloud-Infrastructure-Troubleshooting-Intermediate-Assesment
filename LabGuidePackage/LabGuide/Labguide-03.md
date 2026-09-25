@@ -1,81 +1,47 @@
-# Scenario 3: Diagnose the PAYNOTIFY Network Design
+# Scenario 3: Review the PAYNOTIFY Network Basics
 
-### Duration: 30 Minutes
+### Duration: 20 Minutes
 
 ## Overview
 
-With the production incident closed, the architecture board asks you to review the wider PAYNOTIFY network in the **vpc-core** account before the next release. The design has grown over several projects and a number of connectivity complaints are still open. Below are the VPC layout, the route tables, a network ACL, a flow log excerpt and the open complaints collected by the operations team.
+The PAYNOTIFY team is building a development copy of the service in a separate VPC. Before the build goes live, the team lead asks you to review the design below and answer a few questions about how traffic and access work in it.
 
-**VPCs and peering, all in the same AWS Region:**
+**VPC pn-dev-vpc, CIDR 10.20.0.0/16:**
 
-| VPC | CIDR | Purpose |
+| Subnet | CIDR | Route table entries |
 |---|---|---|
-| vpc-core | 10.10.0.0/16 | PAYNOTIFY production workloads |
-| vpc-shared | 10.30.0.0/16 | Shared services, monitoring server with security group sg-0mon |
-| vpc-analytics | 10.10.128.0/17 | Reporting and dashboards |
+| dev-public | 10.20.1.0/24 | 10.20.0.0/16 to local, 0.0.0.0/0 to igw-dev |
+| dev-private | 10.20.2.0/24 | 10.20.0.0/16 to local, 0.0.0.0/0 to nat-dev |
 
-| Peering connection | Between | Status |
+**Resources:**
+
+| Resource | Placement | Details |
 |---|---|---|
-| pcx-core-shared | vpc-core and vpc-shared | Active |
-| pcx-shared-analytics | vpc-shared and vpc-analytics | Active |
+| igw-dev | pn-dev-vpc | Internet gateway |
+| nat-dev | dev-public | NAT gateway |
+| pn-dev-alb | dev-public | Internet-facing Application Load Balancer, target group with dev-web |
+| dev-web | dev-public | EC2 web server with a public IP, security group sg-dev-web |
+| dev-app | dev-private | EC2 app server, no public IP, security group sg-dev-app, IAM role dev-app-role |
+| dev-db | dev-private | Amazon RDS for MySQL on port 3306, security group sg-dev-db |
+| dev-reports | Amazon S3 | Bucket used by dev-app |
 
-**Subnets in vpc-core:**
+**Security group inbound rules:**
 
-| Subnet | CIDR | Availability Zone | Route table | Notes |
-|---|---|---|---|---|
-| public-a | 10.10.1.0/24 | AZ a | rt-public-a | Load balancer node |
-| public-b | 10.10.2.0/24 | AZ b | rt-public-b | Load balancer node |
-| app-a | 10.10.11.0/24 | AZ a | rt-app | App instances, no public IPs |
-| app-b | 10.10.12.0/24 | AZ b | rt-app-b | Hosts NAT gateway nat-0a1 |
-| db-a | 10.10.21.0/24 | AZ a | rt-db | Database, network ACL acl-db |
-
-**Route tables in vpc-core:**
-
-| Route table | Destination | Target |
+| Security group | Port | Source |
 |---|---|---|
-| rt-public-a | 10.10.0.0/16 | local |
-| rt-public-a | 0.0.0.0/0 | igw-0main |
-| rt-public-b | 10.10.0.0/16 | local |
-| rt-public-b | 10.30.0.0/16 | pcx-core-shared |
-| rt-app | 10.10.0.0/16 | local |
-| rt-app | 0.0.0.0/0 | nat-0a1 |
-| rt-app | 10.30.0.0/16 | pcx-core-shared |
-| rt-app-b | 10.10.0.0/16 | local |
-| rt-app-b | 0.0.0.0/0 | nat-0a1 |
-| rt-db | 10.10.0.0/16 | local |
+| sg-dev-web | 80 | 0.0.0.0/0 |
+| sg-dev-app | 8080 | sg-dev-web |
+| sg-dev-db | 3306 | sg-dev-app |
 
-**Network ACL acl-db, associated with db-a:**
+All security groups keep the default outbound rule that allows all traffic.
 
-| Direction | Rule | Protocol | Port | Source or destination | Action |
-|---|---|---|---|---|---|
-| Inbound | 100 | TCP | 3306 | 10.10.11.0/24 | Allow |
-| Inbound | * | All | All | 0.0.0.0/0 | Deny |
-| Outbound | 100 | TCP | 3306 | 10.10.11.0/24 | Allow |
-| Outbound | * | All | All | 0.0.0.0/0 | Deny |
-
-**VPC flow log excerpt for the database network interface eni-0db01:**
-
-```
-srcaddr       dstaddr       srcport  dstport  protocol  action
-10.10.11.25   10.10.21.40   51544    3306     6         ACCEPT
-10.10.21.40   10.10.11.25   3306     51544    6         REJECT
-```
-
-**Open complaints:**
-
-- App instances in app-a time out when they connect to the database in db-a.
-- App instances in app-a cannot download operating system updates from the internet. nat-0a1 shows the state **Available**.
-- Roughly half of the requests to the internet-facing load balancer **pn-alb-reporting**, which uses public-a and public-b, time out.
-- Finance flagged high NAT gateway data processing charges. Most of that traffic is statement files downloaded from Amazon S3 in the same Region.
-- The analytics team wants direct access from vpc-analytics to the PAYNOTIFY database in vpc-core.
-- The monitoring server in vpc-shared must scrape port 9100 on the vpc-core app instances.
+**IAM role dev-app-role:** allows **s3:GetObject** on **arn:aws:s3:::dev-reports/\***.
 
 **Reference notes** - background you may need. These are not clues specific to this incident.
 
-- **Network ACLs** are stateless and evaluate rules in number order. Return traffic must be allowed explicitly, usually on the ephemeral port range 1024-65535. **Security groups** are stateful.
-- A **NAT gateway** needs a route to an internet gateway in its own subnet to forward traffic to the internet.
-- **VPC peering** requires non-overlapping CIDR blocks and does not support transitive routing.
-- A **gateway endpoint** for Amazon S3 is added as a route in selected route tables and has no data processing charge.
+- A **public subnet** has a route to an internet gateway. A **private subnet** does not, and usually reaches the internet through a **NAT gateway** placed in a public subnet.
+- **Security groups** are stateful. Return traffic for an allowed connection is allowed automatically.
+- EC2 instances should get AWS permissions through an **IAM role**, not stored access keys.
 
 ## Answer the following questions
 
@@ -103,7 +69,7 @@ srcaddr       dstaddr       srcport  dstport  protocol  action
 
 ## Summary
 
-In this scenario, you reviewed the PAYNOTIFY network design and identified issues with stateless network ACL rules, NAT gateway placement, load balancer subnet routing, S3 traffic cost, VPC peering limits and cross-VPC security group references.
+In this scenario, you reviewed public and private subnets, NAT gateway traffic, security group rules, IAM role permissions for S3 and load balancer health checks.
 
 You have completed the assessment. Select **End** to submit your results.
 

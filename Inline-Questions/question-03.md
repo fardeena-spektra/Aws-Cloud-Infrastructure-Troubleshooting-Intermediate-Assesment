@@ -2,19 +2,19 @@
 Question Type : Single Choice
 
 ## Question
-3. Finance flagged high NAT gateway data processing charges caused by the app tier downloading statement files from Amazon S3 in the same Region. Which change removes those charges while keeping the instances private?
+3. A developer on dev-web tries to connect to the dev-db database on port 3306 and the connection times out. Why?
 
 ## Options
-Option 1 : Give the app instances public IP addresses so S3 downloads leave through igw-0main instead.
+Option 1 : sg-dev-db only allows 3306 from sg-dev-app, so traffic from dev-web is not allowed.
 
-Option 2 : Replace nat-0a1 with a NAT instance on a larger instance type to cut the per-GB charges.
+Option 2 : dev-web sits in a public subnet, and public instances can never connect to RDS databases.
 
-Option 3 : Create an S3 gateway endpoint associated with rt-app so S3 traffic stops using nat-0a1.
+Option 3 : RDS MySQL listens on port 1433, so the developer must connect to that port on dev-db.
 
-Option 4 : Create an S3 interface endpoint in public-a and point the rt-app 0.0.0.0/0 route at it.
+Option 4 : dev-db has no public IP address, so no instance in the VPC is able to reach it at all.
 
 ## Answers
-Option 3 : 2
+Option 1 : 2
 
 ## Number of Retries
 1

@@ -1,11 +1,14 @@
 # =====================================================================
 # PAYNOTIFY AWS Troubleshooting Assessment
-# Scenario 1 - Task 1 : Restore Session Manager Connectivity to the Web Instance
+# Scenario 2 - Task 1 : Repair the PAYNOTIFY Notification Function
 #
 # Checks performed (all must pass):
-#   1. pn-web-01 exists
-#   2. The pn-web-01 IAM role grants the Systems Manager core permissions
-#   3. pn-web-01 is Online in Systems Manager
+#   1. The pn-notify function exists
+#   2. The handler is index.lambda_handler
+#   3. BUCKET_NAME points to the pn-statements bucket
+#   4. The execution role can write to notifications/ in the bucket
+#   5. A test invocation succeeds without a function error
+#   6. notifications/latest.json exists in the bucket
 #
 # Read-only: this validator never changes the environment.
 # =====================================================================
@@ -108,18 +111,32 @@ function Get-NaclDecision($entries, [bool]$egress, [string]$ip, [int]$port) {
 $message = ''
 try {
 
-    $web = Get-TaggedInstance 'pn-web-01'
-    Add-Check ([bool]$web) 'The web instance pn-web-01 was not found. Contact your instructor.'
-    if ($web) {
-        $roleArn = Get-InstanceRoleArn $web
-        $ok = $false
-        if ($roleArn) {
-            $ok = (Test-Allowed $roleArn 'ssm:UpdateInstanceInformation' '*') -and
-                  (Test-Allowed $roleArn 'ssmmessages:CreateControlChannel' '*') -and
-                  (Test-Allowed $roleArn 'ec2messages:GetMessages' '*')
-        }
-        Add-Check $ok 'Task 1 - the IAM role on pn-web-01 does not grant the Systems Manager permissions. Attach AmazonSSMManagedInstanceCore to that role.'
-        Add-Check (Test-SSMOnline $web.InstanceId) 'Task 1 - pn-web-01 is not Online in Systems Manager yet. Reboot the instance, wait 3 to 5 minutes, then validate again.'
+    $fn = $null
+    if ($did) { $fn = Get-LMFunctionConfiguration -FunctionName "pn-notify-$did" -ErrorAction SilentlyContinue }
+    else { $fn = Get-LMFunctionList | Where-Object { $_.FunctionName -like 'pn-notify-*' } | Select-Object -First 1 }
+    $bucket = Get-S3Bucket | Where-Object { $_.BucketName -like ((Get-Pattern 'pn-statements') + '-*') } | Select-Object -First 1
+    Add-Check ([bool]($fn -and $bucket)) 'The pn-notify function or the pn-statements bucket was not found. Contact your instructor.'
+    if ($fn -and $bucket) {
+        $b = $bucket.BucketName
+        Add-Check ($fn.Handler -eq 'index.lambda_handler') "The handler is '$($fn.Handler)'. It must be index.lambda_handler."
+
+        $envBucket = ''
+        if ($fn.Environment -and $fn.Environment.Variables) { $envBucket = "$($fn.Environment.Variables['BUCKET_NAME'])" }
+        Add-Check ($envBucket -eq $b) "The environment variable BUCKET_NAME is '$envBucket'. It must be $b."
+
+        $canWrite = Test-Allowed $fn.Role 's3:PutObject' "arn:aws:s3:::$b/notifications/latest.json"
+        Add-Check $canWrite 'The function execution role cannot run s3:PutObject on the notifications folder of the bucket.'
+
+        $invOk = $false
+        try {
+            $r = Invoke-LMFunction -FunctionName $fn.FunctionName -Payload '{"customer":"cloudlabs-validator"}'
+            $invOk = ($r.StatusCode -eq 200 -and -not $r.FunctionError)
+            if ($r.FunctionError) { Write-Host "FunctionError: $($r.FunctionError)" }
+        } catch { Write-Host "Invoke failed: $($_.Exception.Message)" }
+        Add-Check $invOk 'A test run of the function still fails. Run a test event and read the error in the execution result.'
+
+        $obj = Get-S3Object -BucketName $b -Prefix 'notifications/' | Where-Object { $_.Key -eq 'notifications/latest.json' }
+        Add-Check ([bool]$obj) 'notifications/latest.json was not found in the bucket.'
     }
 
     $total = $script:passes + $script:fails.Count

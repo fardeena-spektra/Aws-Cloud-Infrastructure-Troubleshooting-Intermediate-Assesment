@@ -2,19 +2,19 @@
 Question Type : Single Choice
 
 ## Question
-6. Instances in app-a cannot reach the internet, even though rt-app sends 0.0.0.0/0 to nat-0a1 and the NAT gateway shows Available. What fixes the issue?
+6. The target group behind pn-dev-alb shows dev-web as Unhealthy with health checks failing on code 404. The site works on the instance. What is the most likely cause?
 
 ## Options
-Option 1 : Attach a second internet gateway to vpc-core and add it to rt-app-b next to the NAT route.
+Option 1 : The health check path points to a page that does not exist on the web application.
 
-Option 2 : Allocate a second Elastic IP to nat-0a1 so it can translate traffic for several subnets.
+Option 2 : The load balancer is internal, so its health checks cannot reach any public instance.
 
-Option 3 : Recreate the NAT gateway in a public subnet, then point the rt-app default route at it.
+Option 3 : dev-web has too little memory, so it returns 404 whenever the load balancer checks it.
 
-Option 4 : Change the rt-app default route from nat-0a1 to igw-0main so that app-a uses the gateway.
+Option 4 : The target group uses HTTP, and health checks only work when the protocol is HTTPS.
 
 ## Answers
-Option 3 : 2
+Option 1 : 2
 
 ## Number of Retries
 1
