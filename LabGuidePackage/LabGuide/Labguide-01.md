@@ -1,7 +1,5 @@
 # Scenario 1: Repair the PAYNOTIFY Statements Bucket
 
-### Duration: 20 Minutes
-
 ## Overview
 
 PAYNOTIFY stores customer statements in the S3 bucket **<inject key="StatementsBucket" />**. A security review found that the bucket is not protected from public access and keeps no previous versions of files. On top of that, uploads to the **statements** folder have failed since the change window.
