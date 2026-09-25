@@ -39,10 +39,13 @@ In this task, you will fix the function configuration and its permissions until 
 1. The run fails with **Handler 'handler' missing on module 'index' (1)**. Open the **Code (2)** tab and notice that the function in **index.py** is named **lambda_handler (3)**.
 
    ![](../media/s2-t1-04.png)
+   ![](../media/s2-t1-04.1.png)
 
 1. On the **Code** tab, scroll to **Runtime settings (1)** and select **Edit (2)**. Change **Handler** to **index.lambda_handler (3)** and select **Save (4)**.
 
    ![](../media/s2-t1-05.png)
+   ![](../media/s2-t1-05.1.png)
+
 
 1. Return to the **Test (1)** tab and select **Test (2)** again. The run now fails with an S3 error **(3)** because the function writes to a bucket named **pn-statements-archive**, which does not belong to this environment.
 
@@ -63,6 +66,7 @@ In this task, you will fix the function configuration and its permissions until 
 1. Return to the **Test (1)** tab and select **Test (2)** again. The run now fails with **AccessDenied (3)** on **PutObject**. The function execution role is not allowed to write to the bucket.
 
    ![](../media/s2-t1-09.png)
+   ![](../media/s2-t1-09.1.png)
 
 1. Open the **Configuration (1)** tab, select **Permissions (2)**, and select the role name under **Execution role (3)**. The IAM console opens.
 
