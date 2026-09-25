@@ -50,9 +50,9 @@ In this task, you will fix the bucket settings and confirm that a statement file
 
 1. On the virtual machine, open **Notepad**, type the text below, and save the file on the **Desktop** as **test-statement.txt**.
 
-```
-   PAYNOTIFY test statement
-```
+      ```
+         PAYNOTIFY test statement
+      ```
 
    ![](./media/s1-t1-09.png)
 
