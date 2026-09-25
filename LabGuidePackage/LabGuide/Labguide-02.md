@@ -107,7 +107,9 @@ In this task, you will fix the function configuration and its permissions until 
 > **Congratulations** on completing the task! Now, it's time to validate it. Here are the steps:
 > - Hit the Validate button for the corresponding task. If you receive a success message, you can proceed to the next task.
 > - If not, carefully read the error message and retry the step, following the instructions in the assessment guide.
-> - If you need any assistance, please contact us at cloudlabs-support@spektrasystems.com. We are available 24/7 to help you out.<validation step="REPLACE-WITH-S2-T1-VALIDATION-ID" />
+> - If you need any assistance, please contact us at cloudlabs-support@spektrasystems.com. We are available 24/7 to help you out.
+
+<validation step="f03d9cb8-b472-4e41-84a3-9abd3f5a6fdb" />
 
 ## Summary
 
