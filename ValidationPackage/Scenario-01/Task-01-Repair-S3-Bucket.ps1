@@ -14,11 +14,30 @@
 
 $ErrorActionPreference = 'Stop'
 
-$region = 'us-east-1'
-Set-DefaultAWSRegion -Region $region
-
+# ---------------------------------------------------------------------
+# Region auto-detect: works in any AWS Region.
+# 1. Use $region if CloudLabs passes it, else AWS_REGION / AWS_DEFAULT_REGION.
+# 2. Otherwise read the Region of the pn-statements bucket (same stack).
+# ---------------------------------------------------------------------
 $did = "$deploymentid".Trim()
 Write-Host "Deployment ID: $did"
+
+$region = "$region".Trim()
+if (-not $region) { $region = "$env:AWS_REGION".Trim() }
+if (-not $region) { $region = "$env:AWS_DEFAULT_REGION".Trim() }
+if (-not $region) {
+    $bucketPattern = if ($did) { "pn-statements-$did-*" } else { 'pn-statements-*' }
+    $lookup = Get-S3Bucket -Region 'us-east-1' | Where-Object { $_.BucketName -like $bucketPattern } | Select-Object -First 1
+    if ($lookup) {
+        $loc = "$((Get-S3BucketLocation -BucketName $lookup.BucketName -Region 'us-east-1').Value)"
+        if (-not $loc -or $loc -eq 'US') { $region = 'us-east-1' }
+        elseif ($loc -eq 'EU') { $region = 'eu-west-1' }
+        else { $region = $loc }
+    }
+}
+if (-not $region) { $region = 'us-east-1' }
+Set-DefaultAWSRegion -Region $region
+Write-Host "Region: $region"
 
 $status = 'Failed'
 $script:passes = 0
