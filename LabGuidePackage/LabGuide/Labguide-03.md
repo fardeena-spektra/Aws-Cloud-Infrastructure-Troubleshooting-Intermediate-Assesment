@@ -1,7 +1,5 @@
 # Scenario 3: Review the PAYNOTIFY Network Basics
 
-### Duration: 20 Minutes
-
 ## Overview
 
 The PAYNOTIFY team is building a development copy of the service in a separate VPC. Before the build goes live, the team lead asks you to review the design below and answer a few questions about how traffic and access work in it.
@@ -45,27 +43,27 @@ All security groups keep the default outbound rule that allows all traffic.
 
 ## Answer the following questions
 
-<question source="../../Inline-Questions/question-01.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-01.md" />
 
 <br>
 
-<question source="../../Inline-Questions/question-02.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-02.md" />
 
 <br>
 
-<question source="../../Inline-Questions/question-03.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-03.md" />
 
 <br>
 
-<question source="../../Inline-Questions/question-04.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-04.md" />
 
 <br>
 
-<question source="../../Inline-Questions/question-05.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-05.md" />
 
 <br>
 
-<question source="../../Inline-Questions/question-06.md" />
+<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-06.md" />
 
 ## Summary
 
