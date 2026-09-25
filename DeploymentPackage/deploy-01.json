@@ -1,0 +1,1302 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudLabs PAYNOTIFY AWS Troubleshooting Assessment - Windows jump VM plus seeded broken web, app, S3 and RDS tiers",
+    "Parameters": {
+        "CloudLabsDeploymentID": {
+            "Type": "String"
+        },
+        "CheckAcknowledgement": {
+            "Type": "String",
+            "Default": "TRUE",
+            "AllowedValues": [
+                "TRUE",
+                "FALSE"
+            ]
+        },
+        "vpcCidr": {
+            "Type": "String",
+            "Default": "10.10.0.0/16"
+        },
+        "subnetCidr": {
+            "Type": "String",
+            "Default": "10.10.1.0/24",
+            "Description": "Public subnet A (jump VM, NAT gateway, ALB)"
+        },
+        "publicSubnetBCidr": {
+            "Type": "String",
+            "Default": "10.10.2.0/24"
+        },
+        "webSubnetCidr": {
+            "Type": "String",
+            "Default": "10.10.3.0/24"
+        },
+        "appSubnetCidr": {
+            "Type": "String",
+            "Default": "10.10.11.0/24"
+        },
+        "dbSubnetACidr": {
+            "Type": "String",
+            "Default": "10.10.21.0/24"
+        },
+        "dbSubnetBCidr": {
+            "Type": "String",
+            "Default": "10.10.22.0/24"
+        },
+        "AmazonECSTaskExecutionRolePolicy": {
+            "Type": "String",
+            "Default": "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+        },
+        "VMUserName": {
+            "Type": "String",
+            "Default": "cloudadmin"
+        },
+        "VMPassword": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "TaskExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ecs-tasks.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "ManagedPolicyArns": [
+                    {
+                        "Ref": "AmazonECSTaskExecutionRolePolicy"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "TaskExecutionRole-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "SSMRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+                ]
+            }
+        },
+        "SSMInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Roles": [
+                    {
+                        "Ref": "SSMRole"
+                    }
+                ]
+            }
+        },
+        "clgVpc": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {
+                    "Ref": "vpcCidr"
+                },
+                "EnableDnsSupport": true,
+                "EnableDnsHostnames": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-core-vpc-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "clgInternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-igw-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "attachInternetGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "clgInternetGateway"
+                },
+                "VpcId": {
+                    "Ref": "clgVpc"
+                }
+            }
+        },
+        "vmSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}a"
+                },
+                "MapPublicIpOnLaunch": true,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "subnetCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-public-subnet-a-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "publicSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}b"
+                },
+                "MapPublicIpOnLaunch": true,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "publicSubnetBCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-public-subnet-b-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}a"
+                },
+                "MapPublicIpOnLaunch": true,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "webSubnetCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-subnet-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appSubnet": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}a"
+                },
+                "MapPublicIpOnLaunch": false,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "appSubnetCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-app-subnet-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "dbSubnetA": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}a"
+                },
+                "MapPublicIpOnLaunch": false,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "dbSubnetACidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-db-subnet-a-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "dbSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::Sub": "${AWS::Region}b"
+                },
+                "MapPublicIpOnLaunch": false,
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "CidrBlock": {
+                    "Ref": "dbSubnetBCidr"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-db-subnet-b-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "RouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-public-rt-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "routesToInternetGateway": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "attachInternetGateway",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "clgInternetGateway"
+                }
+            }
+        },
+        "vmSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "vmSubnet"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
+        },
+        "publicSubnetBRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "publicSubnetB"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
+        },
+        "webSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "webSubnet"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
+        },
+        "natEip": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "attachInternetGateway",
+            "Properties": {
+                "Domain": "vpc",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-nat-eip-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "natGateway": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {
+                    "Fn::GetAtt": [
+                        "natEip",
+                        "AllocationId"
+                    ]
+                },
+                "SubnetId": {
+                    "Ref": "vmSubnet"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-nat-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "privateRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-private-rt-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "privateDefaultRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "attachInternetGateway",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "privateRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "clgInternetGateway"
+                }
+            }
+        },
+        "appSubnetRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "appSubnet"
+                },
+                "RouteTableId": {
+                    "Ref": "privateRouteTable"
+                }
+            }
+        },
+        "dbRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-db-rt-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "dbSubnetARouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "dbSubnetA"
+                },
+                "RouteTableId": {
+                    "Ref": "dbRouteTable"
+                }
+            }
+        },
+        "dbSubnetBRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "dbSubnetB"
+                },
+                "RouteTableId": {
+                    "Ref": "dbRouteTable"
+                }
+            }
+        },
+        "vmSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow RDP to the jump VM",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 3389,
+                        "ToPort": 3389,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "vmSecurityGroup-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "clgSg": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Security group for Fargate ECS container - fully open",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIpv6": "::/0"
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIpv6": "::/0"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "clgSg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "albSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": {
+                    "Fn::Sub": "pn-alb-sg-${CloudLabsDeploymentID}"
+                },
+                "GroupDescription": "PAYNOTIFY public load balancer",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "HTTPS from internet"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-alb-sg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": {
+                    "Fn::Sub": "pn-web-sg-${CloudLabsDeploymentID}"
+                },
+                "GroupDescription": "PAYNOTIFY web tier",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 8080,
+                        "ToPort": 8080,
+                        "CidrIp": "10.99.0.0/16",
+                        "Description": "App traffic from legacy LB range"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-sg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": {
+                    "Fn::Sub": "pn-app-sg-${CloudLabsDeploymentID}"
+                },
+                "GroupDescription": "PAYNOTIFY private app tier",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "HTTPS out"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-app-sg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "dbSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupName": {
+                    "Fn::Sub": "pn-db-sg-${CloudLabsDeploymentID}"
+                },
+                "GroupDescription": "PAYNOTIFY orders database",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 3306,
+                        "ToPort": 3306,
+                        "SourceSecurityGroupId": {
+                            "Fn::GetAtt": [
+                                "webSecurityGroup",
+                                "GroupId"
+                            ]
+                        },
+                        "Description": "MySQL from application tier"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-db-sg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webNacl": {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-nacl-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webNaclIn100": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "webNacl"
+                },
+                "RuleNumber": 100,
+                "Protocol": -1,
+                "RuleAction": "allow",
+                "Egress": false,
+                "CidrBlock": "0.0.0.0/0"
+            }
+        },
+        "webNaclOut90": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "webNacl"
+                },
+                "RuleNumber": 90,
+                "Protocol": 6,
+                "RuleAction": "deny",
+                "Egress": true,
+                "CidrBlock": {
+                    "Ref": "vpcCidr"
+                },
+                "PortRange": {
+                    "From": 1024,
+                    "To": 65535
+                }
+            }
+        },
+        "webNaclOut100": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "webNacl"
+                },
+                "RuleNumber": 100,
+                "Protocol": -1,
+                "RuleAction": "allow",
+                "Egress": true,
+                "CidrBlock": "0.0.0.0/0"
+            }
+        },
+        "webNaclAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "webSubnet"
+                },
+                "NetworkAclId": {
+                    "Ref": "webNacl"
+                }
+            }
+        },
+        "webRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-role-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Roles": [
+                    {
+                        "Ref": "webRole"
+                    }
+                ]
+            }
+        },
+        "appDataBucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Delete",
+            "UpdateReplacePolicy": "Delete",
+            "Properties": {
+                "BucketName": {
+                    "Fn::Sub": "pn-appdata-${CloudLabsDeploymentID}-${AWS::AccountId}"
+                },
+                "PublicAccessBlockConfiguration": {
+                    "BlockPublicAcls": true,
+                    "BlockPublicPolicy": true,
+                    "IgnorePublicAcls": true,
+                    "RestrictPublicBuckets": true
+                },
+                "OwnershipControls": {
+                    "Rules": [
+                        {
+                            "ObjectOwnership": "BucketOwnerEnforced"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-appdata-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appGuardrailPolicy": {
+            "Type": "AWS::IAM::ManagedPolicy",
+            "Properties": {
+                "Description": "Change freeze CHG-4471: block report uploads during release",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "FreezeReportUploads",
+                            "Effect": "Deny",
+                            "Action": "s3:PutObject",
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${appDataBucket}/reports/*"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "appRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "ec2.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+                    {
+                        "Ref": "appGuardrailPolicy"
+                    }
+                ],
+                "Policies": [
+                    {
+                        "PolicyName": "pn-app-s3-access",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "ListAppDataBucket",
+                                    "Effect": "Allow",
+                                    "Action": "s3:ListBucket",
+                                    "Resource": {
+                                        "Fn::Sub": "arn:aws:s3:::${appDataBucket}/*"
+                                    }
+                                },
+                                {
+                                    "Sid": "ReadAppObjects",
+                                    "Effect": "Allow",
+                                    "Action": "s3:GetObject",
+                                    "Resource": {
+                                        "Fn::Sub": "arn:aws:s3:::${appDataBucket}"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-app-role-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Roles": [
+                    {
+                        "Ref": "appRole"
+                    }
+                ]
+            }
+        },
+        "dbSubnetGroup": {
+            "Type": "AWS::RDS::DBSubnetGroup",
+            "Properties": {
+                "DBSubnetGroupDescription": "PAYNOTIFY database subnets",
+                "SubnetIds": [
+                    {
+                        "Ref": "dbSubnetA"
+                    },
+                    {
+                        "Ref": "dbSubnetB"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-db-subnet-group-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "dbInstance": {
+            "Type": "AWS::RDS::DBInstance",
+            "DeletionPolicy": "Delete",
+            "UpdateReplacePolicy": "Delete",
+            "Properties": {
+                "DBInstanceIdentifier": {
+                    "Fn::Sub": "pn-orders-db-${CloudLabsDeploymentID}"
+                },
+                "Engine": "mysql",
+                "DBInstanceClass": "db.t3.micro",
+                "AllocatedStorage": "20",
+                "StorageType": "gp2",
+                "MasterUsername": "pnadmin",
+                "ManageMasterUserPassword": true,
+                "DBSubnetGroupName": {
+                    "Ref": "dbSubnetGroup"
+                },
+                "VPCSecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "dbSecurityGroup",
+                            "GroupId"
+                        ]
+                    }
+                ],
+                "PubliclyAccessible": false,
+                "MultiAZ": false,
+                "BackupRetentionPeriod": 0,
+                "DeletionProtection": false,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-orders-db-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "vmInstance": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "routesToInternetGateway",
+            "Properties": {
+                "ImageId": {
+                    "Fn::Sub": "{{resolve:ssm:/aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base}}"
+                },
+                "InstanceType": "t3.medium",
+                "IamInstanceProfile": {
+                    "Ref": "SSMInstanceProfile"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "vmSecurityGroup"
+                    }
+                ],
+                "SubnetId": {
+                    "Ref": "vmSubnet"
+                },
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "VolumeSize": 50,
+                            "VolumeType": "gp3",
+                            "DeleteOnTermination": true
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Sub": "<powershell>\n$ErrorActionPreference = 'Continue'\nStart-Transcript -Path C:\\Windows\\Temp\\cloudlabs-bootstrap.log -Append\n$user = '${VMUserName}'\n$pass = @'\n${VMPassword}\n'@\n$pass = $pass.Trim()\n$sec = ConvertTo-SecureString $pass -AsPlainText -Force\nif (-not (Get-LocalUser -Name $user -ErrorAction SilentlyContinue)) {\n  New-LocalUser -Name $user -Password $sec -FullName 'CloudLabs Administrator' -PasswordNeverExpires -AccountNeverExpires\n} else {\n  Set-LocalUser -Name $user -Password $sec -PasswordNeverExpires $true\n}\nAdd-LocalGroupMember -Group 'Administrators' -Member $user -ErrorAction SilentlyContinue\nAdd-LocalGroupMember -Group 'Remote Desktop Users' -Member $user -ErrorAction SilentlyContinue\nSet-ItemProperty -Path 'HKLM:\\System\\CurrentControlSet\\Control\\Terminal Server' -Name 'fDenyTSConnections' -Value 0\nEnable-NetFirewallRule -DisplayGroup 'Remote Desktop'\nSet-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}' -Name 'IsInstalled' -Value 0 -ErrorAction SilentlyContinue\nSet-ItemProperty -Path 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}' -Name 'IsInstalled' -Value 0 -ErrorAction SilentlyContinue\n[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\ntry {\n  Invoke-WebRequest -Uri 'https://awscli.amazonaws.com/AWSCLIV2.msi' -OutFile 'C:\\Windows\\Temp\\AWSCLIV2.msi' -UseBasicParsing\n  Start-Process msiexec.exe -ArgumentList '/i C:\\Windows\\Temp\\AWSCLIV2.msi /qn /norestart' -Wait\n} catch { Write-Output \"AWS CLI install failed: $_\" }\nSet-Service -Name AmazonSSMAgent -StartupType Automatic\nRestart-Service -Name AmazonSSMAgent -Force\nStop-Transcript\n</powershell>\n<persist>false</persist>"
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "lab-vm-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webInstance": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "routesToInternetGateway",
+            "Properties": {
+                "ImageId": {
+                    "Fn::Sub": "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
+                },
+                "InstanceType": "t3.micro",
+                "IamInstanceProfile": {
+                    "Ref": "webInstanceProfile"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "webSecurityGroup"
+                    }
+                ],
+                "SubnetId": {
+                    "Ref": "webSubnet"
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Sub": "#!/bin/bash\nset -x\nexec > /var/log/cloudlabs-bootstrap.log 2>&1\nmkdir -p /opt/paynotify/web\ncat > /opt/paynotify/web/index.html <<'EOF'\n<!DOCTYPE html>\n<html><head><title>PAYNOTIFY</title></head>\n<body style=\"font-family:Arial;background:#0b3d2e;color:#fff;text-align:center;padding-top:80px\">\n<h1>PAYNOTIFY Payment Notification Service</h1>\n<p>Web tier is online and serving traffic through the load balancer.</p>\n</body></html>\nEOF\necho OK > /opt/paynotify/web/health\ncat > /etc/systemd/system/paynotify-web.service <<'EOF'\n[Unit]\nDescription=PAYNOTIFY web front end\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nExecStart=/usr/bin/python3 -m http.server 8080 --bind 127.0.0.1 --directory /opt/paynotify/web\nRestart=always\nUser=nobody\n\n[Install]\nWantedBy=multi-user.target\nEOF\nsystemctl daemon-reload\nsystemctl enable --now paynotify-web\nsystemctl enable amazon-ssm-agent\nsystemctl restart amazon-ssm-agent\n"
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-01-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appInstance": {
+            "Type": "AWS::EC2::Instance",
+            "DependsOn": "privateDefaultRoute",
+            "Properties": {
+                "ImageId": {
+                    "Fn::Sub": "{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}"
+                },
+                "InstanceType": "t3.micro",
+                "IamInstanceProfile": {
+                    "Ref": "appInstanceProfile"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "appSecurityGroup"
+                    }
+                ],
+                "SubnetId": {
+                    "Ref": "appSubnet"
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Sub": "#!/bin/bash\nset -x\nexec > /var/log/cloudlabs-bootstrap.log 2>&1\nmkdir -p /opt/paynotify\ncat > /opt/paynotify/healthcheck.sh <<'EOF'\n#!/bin/bash\n# PAYNOTIFY app tier health check\nBUCKET=\"${appDataBucket}\"\nDBHOST=\"${dbInstance.Endpoint.Address}\"\nREPORT=/tmp/paynotify-healthcheck.txt\nexport AWS_MAX_ATTEMPTS=2\nAWSC=\"aws --cli-connect-timeout 5 --cli-read-timeout 10\"\nTOKEN=$(curl -s -m 3 -X PUT http://169.254.169.254/latest/api/token -H \"X-aws-ec2-metadata-token-ttl-seconds: 300\")\nIID=$(curl -s -m 3 -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/instance-id)\nexport AWS_DEFAULT_REGION=$(curl -s -m 3 -H \"X-aws-ec2-metadata-token: $TOKEN\" http://169.254.169.254/latest/meta-data/placement/region)\n: > \"$REPORT\"\nres() { echo \"$1=$2\" >> \"$REPORT\"; printf '[%s] %-9s %s\\n' \"$2\" \"$1\" \"$3\"; }\nshort() { echo \"$1\" | grep -v '^$' | tail -n1 | cut -c1-170; }\necho \"PAYNOTIFY app tier health check on $IID\"\necho \"Bucket   : $BUCKET\"\necho \"Database : $DBHOST\"\necho \"------------------------------------------------------------\"\nCODE=$(curl -s -o /dev/null -m 8 -w \"%{http_code}\" https://checkip.amazonaws.com)\nif [ \"$CODE\" = \"200\" ]; then res INTERNET PASS \"Outbound HTTPS to the internet works\"; else res INTERNET FAIL \"No outbound internet access (result: $CODE)\"; fi\nif ERR=$($AWSC s3api list-objects-v2 --bucket \"$BUCKET\" --max-items 1 2>&1 >/dev/null); then res S3_LIST PASS \"Listed objects in the bucket\"; else res S3_LIST FAIL \"$(short \"$ERR\")\"; fi\necho \"probe from $IID at $(date -u +%FT%TZ)\" > /tmp/pn-probe.txt\nif ERR=$($AWSC s3 cp /tmp/pn-probe.txt \"s3://$BUCKET/probe/$IID.txt\" --only-show-errors 2>&1); then res S3_WRITE PASS \"Wrote probe/$IID.txt\"; else res S3_WRITE FAIL \"$(short \"$ERR\")\"; fi\nif ERR=$($AWSC s3 cp \"s3://$BUCKET/probe/$IID.txt\" /tmp/pn-probe-back.txt --only-show-errors 2>&1); then res S3_READ PASS \"Read probe/$IID.txt back\"; else res S3_READ FAIL \"$(short \"$ERR\")\"; fi\nif timeout 5 bash -c \"exec 3<>/dev/tcp/$DBHOST/3306\" 2>/dev/null; then res RDS_TCP PASS \"TCP 3306 to the database is open\"; else res RDS_TCP FAIL \"Cannot open TCP 3306 to $DBHOST\"; fi\necho \"INSTANCE=$IID\" >> \"$REPORT\"\necho \"CHECKED_AT=$(date -u +%FT%TZ)\" >> \"$REPORT\"\necho \"------------------------------------------------------------\"\nif ERR=$($AWSC s3 cp \"$REPORT\" \"s3://$BUCKET/reports/healthcheck-latest.txt\" --only-show-errors 2>&1); then\n  echo \"[PASS] Report uploaded to s3://$BUCKET/reports/healthcheck-latest.txt\"\nelse\n  echo \"[FAIL] Report upload failed: $(short \"$ERR\")\"\nfi\nEOF\nchmod 755 /opt/paynotify/healthcheck.sh\nsystemctl enable amazon-ssm-agent\nsystemctl restart amazon-ssm-agent\n"
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-app-01-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "webTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "Name": {
+                    "Fn::Sub": "pn-web-tg-${CloudLabsDeploymentID}"
+                },
+                "Port": 8080,
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Ref": "clgVpc"
+                },
+                "TargetType": "instance",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckPath": "/healthz",
+                "HealthCheckIntervalSeconds": 10,
+                "HealthCheckTimeoutSeconds": 5,
+                "HealthyThresholdCount": 2,
+                "UnhealthyThresholdCount": 2,
+                "Matcher": {
+                    "HttpCode": "200"
+                },
+                "Targets": [
+                    {
+                        "Id": {
+                            "Ref": "webInstance"
+                        },
+                        "Port": 8080
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-web-tg-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "appLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "DependsOn": "routesToInternetGateway",
+            "Properties": {
+                "Name": {
+                    "Fn::Sub": "pn-alb-${CloudLabsDeploymentID}"
+                },
+                "Scheme": "internet-facing",
+                "Type": "application",
+                "Subnets": [
+                    {
+                        "Ref": "vmSubnet"
+                    },
+                    {
+                        "Ref": "publicSubnetB"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "albSecurityGroup"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "pn-alb-${CloudLabsDeploymentID}"
+                        }
+                    }
+                ]
+            }
+        },
+        "albListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "LoadBalancerArn": {
+                    "Ref": "appLoadBalancer"
+                },
+                "Port": 80,
+                "Protocol": "HTTP",
+                "DefaultActions": [
+                    {
+                        "Type": "fixed-response",
+                        "FixedResponseConfig": {
+                            "StatusCode": "503",
+                            "ContentType": "text/plain",
+                            "MessageBody": "PAYNOTIFY maintenance window in progress"
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "CloudLabsDeploymentID": {
+            "Description": "CloudLabs Deployment ID",
+            "Value": {
+                "Ref": "CloudLabsDeploymentID"
+            }
+        },
+        "AWSAccountID": {
+            "Description": "AWS Account ID",
+            "Value": {
+                "Ref": "AWS::AccountId"
+            }
+        },
+        "Region": {
+            "Description": "AWS Region",
+            "Value": {
+                "Ref": "AWS::Region"
+            }
+        },
+        "VpcId": {
+            "Description": "The ID of the VPC",
+            "Value": {
+                "Ref": "clgVpc"
+            }
+        },
+        "vmSubnetId": {
+            "Description": "The ID of the VM Subnet",
+            "Value": {
+                "Ref": "vmSubnet"
+            }
+        },
+        "vmSecurityGroupId": {
+            "Description": "The SG ID of the VM",
+            "Value": {
+                "Ref": "vmSecurityGroup"
+            }
+        },
+        "clusterSecurityGroupId": {
+            "Description": "The SG ID of the Cluster",
+            "Value": {
+                "Ref": "clgSg"
+            }
+        },
+        "TaskExecutionRole": {
+            "Description": "The ARN of the Role utilised by ECS Task Definition",
+            "Value": {
+                "Fn::GetAtt": [
+                    "TaskExecutionRole",
+                    "Arn"
+                ]
+            }
+        },
+        "InstanceId": {
+            "Description": "EC2 Instance ID",
+            "Value": {
+                "Ref": "vmInstance"
+            }
+        },
+        "VMName": {
+            "Description": "Name of the VM",
+            "Value": "labvm"
+        },
+        "VMPublicIP": {
+            "Description": "VM Public IP",
+            "Value": {
+                "Fn::GetAtt": [
+                    "vmInstance",
+                    "PublicIp"
+                ]
+            }
+        },
+        "VMPrivateIP": {
+            "Description": "VM Private IP",
+            "Value": {
+                "Fn::GetAtt": [
+                    "vmInstance",
+                    "PrivateIp"
+                ]
+            }
+        },
+        "VMPublicDNSName": {
+            "Description": "Public DNS Name",
+            "Value": {
+                "Fn::GetAtt": [
+                    "vmInstance",
+                    "PublicDnsName"
+                ]
+            }
+        },
+        "VMPrivateDNSName": {
+            "Description": "Private DNS Name",
+            "Value": {
+                "Fn::GetAtt": [
+                    "vmInstance",
+                    "PrivateDnsName"
+                ]
+            }
+        },
+        "VMUserName": {
+            "Description": "VM Username",
+            "Value": {
+                "Ref": "VMUserName"
+            }
+        },
+        "VMPassword": {
+            "Description": "VM Password",
+            "Value": {
+                "Ref": "VMPassword"
+            }
+        },
+        "WebInstanceId": {
+            "Description": "PAYNOTIFY web instance",
+            "Value": {
+                "Ref": "webInstance"
+            }
+        },
+        "AppInstanceId": {
+            "Description": "PAYNOTIFY app instance",
+            "Value": {
+                "Ref": "appInstance"
+            }
+        },
+        "LoadBalancerDNS": {
+            "Description": "PAYNOTIFY ALB DNS name",
+            "Value": {
+                "Fn::GetAtt": [
+                    "appLoadBalancer",
+                    "DNSName"
+                ]
+            }
+        },
+        "AppDataBucket": {
+            "Description": "PAYNOTIFY app data bucket",
+            "Value": {
+                "Ref": "appDataBucket"
+            }
+        },
+        "DatabaseEndpoint": {
+            "Description": "PAYNOTIFY orders database endpoint",
+            "Value": {
+                "Fn::GetAtt": [
+                    "dbInstance",
+                    "Endpoint.Address"
+                ]
+            }
+        }
+    }
+}

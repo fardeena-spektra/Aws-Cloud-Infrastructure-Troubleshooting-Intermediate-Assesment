@@ -1,0 +1,37 @@
+{
+  "parameters": {
+    "CloudLabsDeploymentID": {
+      "value": "GET-DEPLOYMENT-ID"
+    },
+    "CheckAcknowledgement": {
+      "value": "TRUE"
+    },
+    "vpcCidr": {
+      "value": "10.10.0.0/16"
+    },
+    "subnetCidr": {
+      "value": "10.10.1.0/24"
+    },
+    "publicSubnetBCidr": {
+      "value": "10.10.2.0/24"
+    },
+    "webSubnetCidr": {
+      "value": "10.10.3.0/24"
+    },
+    "appSubnetCidr": {
+      "value": "10.10.11.0/24"
+    },
+    "dbSubnetACidr": {
+      "value": "10.10.21.0/24"
+    },
+    "dbSubnetBCidr": {
+      "value": "10.10.22.0/24"
+    },
+    "VMUserName": {
+      "value": "cloudadmin"
+    },
+    "VMPassword": {
+      "value": "GEN-PASSWORD"
+    }
+  }
+}
