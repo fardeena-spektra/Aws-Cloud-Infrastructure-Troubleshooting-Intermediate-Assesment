@@ -26,11 +26,11 @@ In this task, you will fix the function configuration and its permissions until 
 
 1. Open the **Test (1)** tab. Enter **pn-test (2)** as the event name, replace the event JSON with the text below **(3)**, and select **Test (4)**.
 
-```
-   {
-     "customer": "demo-customer"
-   }
-```
+   ```
+      {
+        "customer": "demo-customer"
+      }
+   ```
 
    ![](./media/s2-t1-03.png)
 
@@ -74,19 +74,19 @@ In this task, you will fix the function configuration and its permissions until 
 
 1. Select **JSON (1)**, replace the content with the policy below **(2)**, and select **Next (3)**.
 
-```
-   {
-     "Version": "2012-10-17",
-     "Statement": [
-       {
-         "Sid": "WriteNotifications",
-         "Effect": "Allow",
-         "Action": "s3:PutObject",
-         "Resource": "arn:aws:s3:::BUCKET-NAME/notifications/*"
-       }
-     ]
-   }
-```
+   ```
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "WriteNotifications",
+            "Effect": "Allow",
+            "Action": "s3:PutObject",
+            "Resource": "arn:aws:s3:::BUCKET-NAME/notifications/*"
+          }
+        ]
+      }
+   ```
 
    > **Note:** Replace **BUCKET-NAME** with **<inject key="StatementsBucket" enableCopy="true"/>** before selecting **Next**.
 
