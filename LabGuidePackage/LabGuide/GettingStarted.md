@@ -26,7 +26,7 @@ Participants should have basic knowledge of the following:
 
 ## Architecture
 
-![](../media/architecture.png)
+![](./media/architecture.png)
 
 - **pn-statements** is the S3 bucket that stores customer statements and notification records.
 - **pn-notify** is a Python Lambda function that writes a notification record to the **pn-statements** bucket.
@@ -61,7 +61,7 @@ All resources in this assessment carry the suffix **-<inject key="CloudLabsDeplo
 
 Once you are ready to begin, your virtual machine and **Guide** are available within your web browser.
 
-![](../media/gs-01.png)
+![](./media/gs-01.png)
 
 ## Virtual Machine and Assessment Guide
 
@@ -74,7 +74,7 @@ Your Windows virtual machine is your workstation throughout this assessment. If 
 
 To view your AWS console credentials and resource details, navigate to the **Environment** tab.
 
-![](../media/gs-02.png)
+![](./media/gs-02.png)
 
 ## Signing in to the AWS Management Console
 
@@ -84,11 +84,11 @@ To view your AWS console credentials and resource details, navigate to the **Env
 
 1. Sign in with the **AWS username (1)** and **AWS password (2)** shown on the **Environment** tab, then select **Sign in (3)**.
 
-   ![](../media/gs-03.png)
+   ![](./media/gs-03.png)
 
 1. In the top-right corner of the console, confirm that the Region is set to **<inject key="Region" />**.
 
-   ![](../media/gs-04.png)
+   ![](./media/gs-04.png)
 
    > **Note:** All assessment resources are deployed in this Region. If you do not see a resource, check the Region selector first.
 
@@ -96,13 +96,13 @@ To view your AWS console credentials and resource details, navigate to the **Env
 
 For convenience, you can open the assessment guide in a separate window by selecting the **Split Window** button from the top-right corner.
 
-![](../media/gs-05.png)
+![](./media/gs-05.png)
 
 ## Managing Your Virtual Machine
 
 You can start, stop or restart your virtual machine as needed from the **Resources** tab.
 
-![](../media/gs-06.png)
+![](./media/gs-06.png)
 
 ## Support Contact
 
@@ -116,6 +116,6 @@ Learner Support Contacts:
 
 Now, click **Next** from the lower-right corner to begin Scenario 1.
 
-![](../media/gs-next.png)
+![](./media/gs-next.png)
 
 ### Happy Assessing !!
