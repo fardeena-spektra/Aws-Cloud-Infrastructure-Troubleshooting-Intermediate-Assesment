@@ -56,14 +56,20 @@ In this task, you will fix the bucket settings and confirm that a statement file
 
    ![](./media/s1-t1-09.png)
 
-1. Return to the bucket, open the **Objects (1)** tab and select **Create folder (2)**. Enter **statements (3)** as the folder name and select **Create folder (4)**.
+1. Return to the bucket, open the **Objects (1)** tab and select **Create folder (2)**.
 
    ![](./media/s1-t1-10.png)
+   
+1. Enter **statements (1)** as the folder name and select **Create folder (2)**.
+
    ![](./media/s1-t1-10.1.png)
 
-1. Open the **statements/ (1)** folder and select **Upload (2)**. Select **Add files (3)**, choose **test-statement.txt** from the Desktop, and select **Upload (4)**.
-
+1. Open the **statements/ (1)** folder and select **Upload (2)**.
+   
    ![](./media/s1-t1-11.png)
+
+1. Select **Add files (3)**, choose **test-statement.txt** from the Desktop, and select **Upload (4)**.
+
    ![](./media/s1-t1-11.1.png)
 
 1. Confirm that the upload shows **Succeeded (1)** and that **test-statement.txt** is listed in the **statements/** folder **(2)**.
