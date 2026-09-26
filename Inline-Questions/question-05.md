@@ -9,7 +9,7 @@ Option 1 : Create an IAM user with access keys and save the keys in a file on th
 
 Option 2 : Make the dev-reports bucket public so that any instance in the VPC is able to write to it.
 
-Option 3 : Add s3:PutObject on arn:aws:s3:::dev-reports/* to the dev-app-role IAM role policy.
+Option 3 : Add s3:PutObject for objects in the dev-reports bucket to the dev-app-role IAM policy.
 
 Option 4 : Attach sg-dev-app to the dev-reports bucket so the instance is allowed to write objects.
 
