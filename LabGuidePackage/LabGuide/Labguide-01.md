@@ -93,5 +93,3 @@ In this scenario, you:
 - Uploaded a test statement to prove the fix.
 
 Click the **Next** button to begin Scenario 2.
-
-### Happy Assessing !!
