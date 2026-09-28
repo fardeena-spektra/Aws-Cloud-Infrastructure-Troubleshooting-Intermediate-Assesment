@@ -1,16 +1,16 @@
-# AWS Cloud Infrastructure Troubleshooting (Intermediate) Assessment
+# AWS Cloud Infrastructure Troubleshooting (Intermediate) 
 
 ## Overview
 
-Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)** assessment.
+Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)**.
 
 A financial services organization runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window, customer statements can no longer be uploaded to Amazon S3 and the notification function in AWS Lambda fails on every run.
 
-In this assessment you take the role of the on-call cloud engineer. You will repair a broken S3 bucket, fix a broken Lambda function, and then answer scenario-based questions on core AWS services.
+In this lab you take the role of the on-call cloud engineer. You will repair a broken S3 bucket, fix a broken Lambda function, and then answer scenario-based questions on core AWS services.
 
 ## Objectives
 
-In this assessment, you will:
+In this lab, you will:
 
 - Secure and repair an Amazon S3 bucket configuration
 - Troubleshoot and fix an AWS Lambda function
@@ -55,22 +55,22 @@ Participants should have basic knowledge of the following:
 | Statements bucket | <inject key="StatementsBucket" enableCopy="true"/> |
 | Lambda function | <inject key="LambdaFunctionName" enableCopy="true"/> |
 
-All resources in this assessment carry the suffix **-<inject key="CloudLabsDeploymentID" />** in their names, for example **pn-notify-<inject key="CloudLabsDeploymentID" />**.
+All resources in this lab carry the suffix **-<inject key="CloudLabsDeploymentID" />** in their names, for example **pn-notify-<inject key="CloudLabsDeploymentID" />**.
 
-## Accessing Your Assessment Environment
+## Accessing Your lab Environment
 
 Once you are ready to begin, your virtual machine and **Guide** are available within your web browser.
 
 ![](./media/gs-01.png)
 
-## Virtual Machine and Assessment Guide
+## Virtual Machine and lab Guide
 
-Your Windows virtual machine is your workstation throughout this assessment. If you are asked to sign in to the virtual machine, use the following credentials:
+Your Windows virtual machine is your workstation throughout this lab. If you are asked to sign in to the virtual machine, use the following credentials:
 
 - **Username:** <inject key="VMUserName" enableCopy="true"/>
 - **Password:** <inject key="VMPassword" enableCopy="true"/>
 
-## Exploring Your Assessment Resources
+## Exploring Your Resources
 
 To view your AWS console credentials and resource details, navigate to the **Environment** tab.
 
@@ -90,11 +90,11 @@ To view your AWS console credentials and resource details, navigate to the **Env
 
    ![](./media/gs-04.png)
 
-   > **Note:** All assessment resources are deployed in this Region. If you do not see a resource, check the Region selector first.
+   > **Note:** All resources are deployed in this Region. If you do not see a resource, check the Region selector first.
 
 ## Utilizing the Split Window Feature
 
-For convenience, you can open the assessment guide in a separate window by selecting the **Split Window** button from the top-right corner.
+For convenience, you can open the lab guide in a separate window by selecting the **Split Window** button from the top-right corner.
 
 ![](./media/gs-05.png)
 
