@@ -4,7 +4,7 @@
 
 Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)** assessment.
 
-Nedbank runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window, customer statements can no longer be uploaded to Amazon S3 and the notification function in AWS Lambda fails on every run.
+A financial services organization runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window, customer statements can no longer be uploaded to Amazon S3 and the notification function in AWS Lambda fails on every run.
 
 In this assessment you take the role of the on-call cloud engineer. You will repair a broken S3 bucket, fix a broken Lambda function, and then answer scenario-based questions on core AWS services.
 
