@@ -116,5 +116,3 @@ Learner Support Contacts:
 Now, click **Next** from the lower-right corner to begin Scenario 1.
 
 ![](./media/gs-next.png)
-
-### Happy Assessing !!
