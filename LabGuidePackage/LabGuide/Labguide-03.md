@@ -70,5 +70,3 @@ All security groups keep the default outbound rule that allows all traffic.
 In this scenario, you reviewed public and private subnets, NAT gateway traffic, security group rules, IAM role permissions for S3 and load balancer health checks.
 
 You have completed the assessment. Select **End** to submit your results.
-
-### Happy Assessing !!
