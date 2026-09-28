@@ -124,4 +124,3 @@ In this scenario, you:
 
 Click the **Next** button to begin Scenario 3.
 
-### Happy Assessing !!
