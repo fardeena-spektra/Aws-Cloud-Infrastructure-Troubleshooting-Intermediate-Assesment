@@ -2,7 +2,7 @@
 
 ## Overview
 
-Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)**.
+Welcome to the **AWS Cloud Infrastructure Troubleshooting (Intermediate)** lab.
 
 A financial services organization runs **PAYNOTIFY**, a payment notification service, on AWS. After last night's change window, customer statements can no longer be uploaded to Amazon S3 and the notification function in AWS Lambda fails on every run.
 
