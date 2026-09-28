@@ -69,4 +69,5 @@ All security groups keep the default outbound rule that allows all traffic.
 
 In this scenario, you reviewed public and private subnets, NAT gateway traffic, security group rules, IAM role permissions for S3 and load balancer health checks.
 
-You have completed the assessment. Select **End** to submit your results.
+## Congratulations! You have successfully completed the AWS Cloud Infrastructure Troubleshooting (Intermediate) lab.
+Please click **End Lab** to complete the lab.
