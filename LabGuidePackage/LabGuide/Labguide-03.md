@@ -1,6 +1,4 @@
-# Scenario 3: Review the PAYNOTIFY Network Basics
-
-## Overview
+# **Scenario 3: Review the PAYNOTIFY Network Basics**
 
 The PAYNOTIFY team is building a development copy of the service in a separate VPC. Before the build goes live, the team lead asks you to review the design below and answer a few questions about how traffic and access work in it.
 
@@ -33,41 +31,43 @@ The PAYNOTIFY team is building a development copy of the service in a separate V
 
 All security groups keep the default outbound rule that allows all traffic.
 
-**IAM role dev-app-role:** allows **s3:GetObject** on **arn:aws:s3:::dev-reports/\***.
+**IAM role dev-app-role, permissions on record:**
 
-**Reference notes** - background you may need. These are not clues specific to this incident.
+  ```
+  Allow s3:GetObject on all objects in the dev-reports bucket
+  ```
+
+  **Reference notes** - background you may need. These are not clues specific to this incident.
 
 - A **public subnet** has a route to an internet gateway. A **private subnet** does not, and usually reaches the internet through a **NAT gateway** placed in a public subnet.
 - **Security groups** are stateful. Return traffic for an allowed connection is allowed automatically.
 - EC2 instances should get AWS permissions through an **IAM role**, not stored access keys.
 
+
+
 ## Answer the following questions
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-01.md" />
+
+
+<question source="../../Inline-Questions/question-36.md" />
 
 <br>
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-02.md" />
+<question source="../../Inline-Questions/question-37.md" />
 
 <br>
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-03.md" />
+<question source="../../Inline-Questions/question-38.md" />
 
 <br>
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-04.md" />
+<question source="../../Inline-Questions/question-39.md" />
 
 <br>
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-05.md" />
+<question source="../../Inline-Questions/question-40.md" />
 
-<br>
+---
 
-<question source="https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/Inline-Questions/question-06.md" />
+## Congratulations! You have successfully completed the **AWS Cloud Infrastructure Troubleshooting (Intermediate)** lab. Please click **End Lab** to complete the lab.
 
-## Summary
-
-In this scenario, you reviewed public and private subnets, NAT gateway traffic, security group rules, IAM role permissions for S3 and load balancer health checks.
-
-## Congratulations! You have successfully completed the AWS Cloud Infrastructure Troubleshooting (Intermediate) lab.
-Please click **End Lab** to complete the lab.
