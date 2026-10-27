@@ -81,7 +81,7 @@ In this task, you will fix the bucket settings and confirm that a statement file
 > - If not, carefully read the error message and retry the step, following the instructions in the lab guide.
 > - If you need any assistance, please contact us at <a href="https://support.cloudlabs.ai/isv">https://support.cloudlabs.ai/isv</a>. We are available 24/7 to help you out.
 
-<validation step="beb0a250-fac5-47f3-902b-94c3f1f4fee6" />
+<validation step="867593d6-415b-46a2-aaed-0a050c98e259" />
 
 ## Summary
 
