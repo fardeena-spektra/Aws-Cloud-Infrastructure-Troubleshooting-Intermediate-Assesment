@@ -16,72 +16,25 @@ _**You (Cloud Engineer):** I will lock it down, turn on versioning, and find out
 
 In this task, you will fix the bucket settings and confirm that a statement file can be uploaded.
 
-1. In the AWS Management Console, search for **S3 (1)** in the search bar and select **S3 (2)**.
+### Challenge
 
-   ![](./media/s1-t1-01.png)
+Repair the bucket **<inject key="StatementsBucket" />** so that it meets the following requirements:
 
-1. Select the bucket **<inject key="StatementsBucket" /> (1)**.
+1. All public access to the bucket is blocked.
+1. Bucket versioning is enabled.
+1. The cause of the failing uploads to the **statements/** folder is found and removed.
+1. A file named **test-statement.txt** containing the text below is uploaded to the **statements/** folder.
 
-   ![](./media/s1-t1-02.png)
-
-1. Open the **Permissions (1)** tab. Under **Block public access (bucket settings)**, notice that it is **Off (2)**. Select **Edit (3)**.
-
-   ![](./media/s1-t1-03.png)
-
-1. Select **Block all public access (1)** and select **Save changes (2)**. Type **confirm (3)** and select **Confirm (4)**.
-
-   ![](./media/s1-t1-04.png)
-
-1. On the same **Permissions** tab, scroll to **Bucket policy (1)**. The policy has a statement **FreezeStatementUploads (2)** that denies **s3:PutObject** for everyone on the **statements/** folder. It was left over from the change freeze.
-
-   ![](./media/s1-t1-05.png)
-
-1. Select **Delete (1)** next to the bucket policy, type **delete (2)** and select **Delete (3)**.
-
-   ![](./media/s1-t1-06.png)
-
-1. Open the **Properties (1)** tab. Under **Bucket Versioning**, notice that it is **Disabled (2)**. Select **Edit (3)**.
-
-   ![](./media/s1-t1-07.png)
-
-1. Select **Enable (1)** and select **Save changes (2)**.
-
-   ![](./media/s1-t1-08.png)
-
-1. On the virtual machine, open **Notepad**, type the text below, and save the file on the **Desktop** as **test-statement.txt**.
-
-      ```
-         PAYNOTIFY test statement
-      ```
-
-   ![](./media/s1-t1-09.png)
-
-1. Return to the bucket, open the **Objects (1)** tab and select **Create folder (2)**.
-
-   ![](./media/s1-t1-10.png)
-   
-1. Enter **statements (1)** as the folder name and select **Create folder (2)**.
-
-   ![](./media/s1-t1-10.1.png)
-
-1. Open the **statements/ (1)** folder and select **Upload (2)**.
-   
-   ![](./media/s1-t1-11.png)
-
-1. Select **Add files (3)**, choose **test-statement.txt** from the Desktop, and select **Upload (4)**.
-
-   ![](./media/s1-t1-11.1.png)
-
-1. Confirm that the upload shows **Succeeded (1)** and that **test-statement.txt** is listed in the **statements/** folder **(2)**.
-
-   ![](./media/s1-t1-12.png)
+   ```
+   PAYNOTIFY test statement
+   ```
 
 > **Congratulations** on completing the task! Now, it's time to validate it. Here are the steps:
 > - Hit the Validate button for the corresponding task. If you receive a success message, you can proceed to the next task.
 > - If not, carefully read the error message and retry the step, following the instructions in the lab guide.
 > - If you need any assistance, please contact us at <a href="https://support.cloudlabs.ai/isv">https://support.cloudlabs.ai/isv</a>. We are available 24/7 to help you out.
 
-<validation step="867593d6-415b-46a2-aaed-0a050c98e259" />
+<validation step="beb0a250-fac5-47f3-902b-94c3f1f4fee6" />
 
 ## Summary
 
