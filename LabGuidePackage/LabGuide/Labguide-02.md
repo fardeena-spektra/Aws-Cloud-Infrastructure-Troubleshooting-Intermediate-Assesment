@@ -111,7 +111,7 @@ In this task, you will fix the function configuration and its permissions until 
 > - If not, carefully read the error message and retry the step, following the instructions in the lab guide.
 > - If you need any assistance, please contact us at <a href="https://support.cloudlabs.ai/isv">https://support.cloudlabs.ai/isv</a>. We are available 24/7 to help you out.
 
-<validation step="f03d9cb8-b472-4e41-84a3-9abd3f5a6fdb" />
+<validation step="84ddac2c-b102-4077-b3ae-1b4b4ec66b66" />
 
 ## Summary
 
