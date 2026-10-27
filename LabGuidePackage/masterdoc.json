@@ -4,15 +4,15 @@
     "Language": "English",
     "Files": [
       {
-        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/GettingStarted.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/demo/LabGuidePackage/LabGuide/GettingStarted.md",
         "Order": 1
       },
       {
-        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/Labguide-01.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/demo/LabGuidePackage/LabGuide/Labguide-01.md",
         "Order": 2
       },
       {
-        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/main/LabGuidePackage/LabGuide/Labguide-02.md",
+        "RawFilePath": "https://raw.githubusercontent.com/fardeena-spektra/Aws-Cloud-Infrastructure-Troubleshooting-Intermediate-Assesment/refs/heads/demo/LabGuidePackage/LabGuide/Labguide-02.md",
         "Order": 3
       },
       {
